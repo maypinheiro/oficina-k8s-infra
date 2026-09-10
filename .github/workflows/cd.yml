@@ -39,6 +39,16 @@ jobs:
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
           terraform_version: 1.6.6
+      - name: Authorize this runner on the EKS public endpoint
+        shell: bash
+        run: |
+          RUNNER_CIDR="$(curl --fail --silent --show-error https://checkip.amazonaws.com)/32"
+          CONFIGURED_CIDRS="${TF_VAR_cluster_public_access_cidrs:-[]}"
+          MERGED_CIDRS="$(jq --compact-output --null-input \
+            --argjson configured "$CONFIGURED_CIDRS" \
+            --arg runner "$RUNNER_CIDR" \
+            '$configured + [$runner] | unique')"
+          echo "TF_VAR_cluster_public_access_cidrs=$MERGED_CIDRS" >> "$GITHUB_ENV"
       - name: Plan and apply
         working-directory: infra
         run: |
