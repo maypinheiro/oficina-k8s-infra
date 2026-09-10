@@ -13,7 +13,22 @@ convertidos para Amazon EKS.
 - Datadog Agent/Cluster Agent;
 - outputs consumidos pelo pipeline da aplicação.
 
-## Estado atual
+## Implementacao cloud
+
+- VPC em duas AZs, sub-redes publicas/privadas e NAT unico;
+- EKS com logs de auditoria e endpoint administrativo restrito;
+- Managed Node Group com scaling por ambiente;
+- ECR com tags imutaveis e scan no push;
+- NLB interno para integracao privada com API Gateway;
+- namespaces `oficina-hml` e `oficina-prod`;
+- HPA, PDB, rolling update, probes, requests e limits;
+- External Secrets com AWS Secrets Manager;
+- Job Prisma executado antes do rollout.
+
+`postgres.yaml` e `metrics-server.yaml` sao preservados apenas como legado local
+e nao sao aplicados na AWS. Consulte `docs/deployment.md` para a ordem de deploy.
+
+## Estado anterior
 
 O diretório `infra/` ainda provisiona Kind. O diretório `k8s/` contém HPA, PDB,
 API e também PostgreSQL local. `postgres.yaml` não será aplicado em cloud porque
