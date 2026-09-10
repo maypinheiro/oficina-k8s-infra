@@ -1,65 +1,66 @@
 # Oficina Kubernetes Infrastructure
 
-Infraestrutura Kubernetes da oficina mantida com Terraform. Os arquivos atuais
-de Kind e manifests foram preservados como baseline da Fase 2 e deverão ser
-convertidos para Amazon EKS.
-
-## Responsabilidades
-
-- VPC, sub-redes e componentes de rede necessários ao EKS;
-- EKS e Managed Node Groups;
-- ambientes `hml` e `prod` isolados logicamente na conta AWS Academy Learner
-  Lab `982623100545`;
-- HPA, PDB, probes, requests e limits;
-- Datadog Agent/Cluster Agent;
-- outputs consumidos pelo pipeline da aplicação.
-
-## Implementacao cloud
-
-- VPC em duas AZs, sub-redes publicas/privadas e NAT unico;
-- EKS com logs de auditoria e endpoint administrativo restrito;
-- Managed Node Group com scaling por ambiente;
-- ECR com tags imutaveis e scan no push;
-- NLB interno para integracao privada com API Gateway;
-- namespaces `oficina-hml` e `oficina-prod`;
-- HPA, PDB, rolling update, probes, requests e limits;
-- External Secrets com AWS Secrets Manager;
-- Job Prisma executado antes do rollout.
-
-`postgres.yaml` e `metrics-server.yaml` sao preservados apenas como legado local
-e nao sao aplicados na AWS. Consulte `docs/deployment.md` para a ordem de deploy.
-
-## Estado anterior
-
-O diretório `infra/` ainda provisiona Kind. O diretório `k8s/` contém HPA, PDB,
-API e também PostgreSQL local. `postgres.yaml` não será aplicado em cloud porque
-o banco da Fase 3 será Amazon RDS no repositório independente de banco.
-
-## Limitações do Learner Lab
-
-- permissões e quotas de EKS/IAM precisam ser validadas antes do apply;
-- dois clusters são o alvo, mas um EKS com namespaces separados é a contingência
-  se saldo ou quotas impedirem o isolamento físico;
-- homologação deve ser temporária sempre que possível;
-- OIDC será usado se permitido; caso contrário, a pipeline receberá credenciais
-  temporárias por GitHub Environment, nunca pelo código.
-
-## Validação técnica
-
-```bash
-terraform -chdir=infra fmt -check -recursive
-terraform -chdir=infra init -backend=false
-terraform -chdir=infra validate
-```
+Infraestrutura como código da rede, Amazon EKS, ECR, workloads Kubernetes e observabilidade da oficina.
 
 ## Arquitetura
 
 ```mermaid
 flowchart LR
-  Terraform["Terraform"] --> VPC["VPC"]
-  Terraform --> EKS["Amazon EKS"]
-  EKS --> Nodes["Managed Node Groups"]
+  TF["Terraform"] --> VPC["VPC / 2 AZs"]
+  TF --> EKS["Amazon EKS"]
+  TF --> ECR["Amazon ECR"]
+  EKS --> Nodes["Managed Node Group"]
   Nodes --> API["Oficina API"]
-  API --> HPA["HPA/PDB"]
-  EKS --> Datadog["Datadog Agent"]
+  API --> HPA["HPA 2–6 / PDB"]
+  EKS --> NLB["NLB interno"]
+  EKS --> DD["Datadog Agent"]
 ```
+
+Relacionados: [API](https://github.com/maypinheiro/oficina-api), [autenticação](https://github.com/maypinheiro/oficina-auth-function) e [banco](https://github.com/maypinheiro/oficina-database-infra).
+
+## Tecnologias
+
+Terraform, AWS VPC/EKS/ECR, Kubernetes, HPA, PDB, Metrics Server, External Secrets, Datadog, GitHub Actions e YAML.
+
+## Pré-requisitos
+
+- Terraform 1.6+, AWS CLI e `kubectl`;
+- credenciais temporárias da conta Academy `982623100545`;
+- chaves Datadog e permissão da `LabRole` para os recursos.
+
+## Execução local e validação
+
+Não há emulador local de EKS. A validação é estática:
+
+```bash
+terraform -chdir=infra fmt -check -recursive
+terraform -chdir=infra init -backend=false
+terraform -chdir=infra validate
+kubectl apply --dry-run=client -f k8s/
+```
+
+`k8s/postgres.yaml` e `metrics-server.yaml` são legado local e não são aplicados no ambiente AWS.
+
+## Variáveis e secrets
+
+Use `environments/hml.tfvars.example` ou `prod.tfvars.example`. O CD requer `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, `TF_STATE_BUCKET`, `TF_STATE_LOCK_TABLE`, `CLUSTER_PUBLIC_ACCESS_CIDRS_JSON`, `DATADOG_API_KEY` e `DATADOG_APP_KEY`. `DATADOG_ALERT_NOTIFICATION` é variável de environment.
+
+## CI/CD e deploy
+
+CI executa formatação, `terraform validate`, tfsec e validações dos manifests. O CD manual seleciona `hml` ou `prod`, usa backend S3/DynamoDB, aplica Terraform e publica outputs. Depois, banco, autenticação e API são implantados nessa ordem. Consulte [deployment](docs/deployment.md) e [CI/CD](docs/cicd.md).
+
+## Rollback
+
+Reaplique um commit/plan conhecido após revisar o diff. Para workload, reverta ao SHA anterior da imagem. Não edite o state nem destrua EKS/VPC como diagnóstico; recursos stateful pertencem ao repositório de banco.
+
+## Outputs
+
+Incluem VPC, sub-redes privadas, cluster EKS, endpoint, ECR, security groups e listener/NLB interno consumidos pelos demais pipelines.
+
+## Observabilidade
+
+Datadog Agent/Cluster Agent, dashboards de API/Kubernetes/negócio e monitores são versionados. Veja [dashboards](docs/dashboards.md).
+
+## Ambiente ativo e limitações
+
+Cluster ativo: **não publicado nesta etapa**. EKS, node groups, NAT e load balancer geram custo e dependem das quotas, saldo, duração de sessão e permissões do Learner Lab. Se dois clusters não forem viáveis, a contingência documentada é um cluster temporário com namespaces isolados.
