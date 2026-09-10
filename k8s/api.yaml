@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: oficina-api
-  namespace: oficina
+  namespace: oficina-env
   labels:
     app.kubernetes.io/name: oficina-api
     app.kubernetes.io/component: backend
@@ -36,7 +36,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: api
-          image: oficina-api:latest
+          image: 982623100545.dkr.ecr.us-east-1.amazonaws.com/oficina-api:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -81,16 +81,20 @@ apiVersion: v1
 kind: Service
 metadata:
   name: oficina-api
-  namespace: oficina
+  namespace: oficina-env
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: /health
   labels:
     app.kubernetes.io/name: oficina-api
     app.kubernetes.io/component: backend
     app.kubernetes.io/part-of: techchallenge
 spec:
-  type: NodePort
+  type: LoadBalancer
+  loadBalancerClass: service.k8s.aws/nlb
   selector:
     app: oficina-api
   ports:
     - port: 80
       targetPort: 3000
-      nodePort: 30080
