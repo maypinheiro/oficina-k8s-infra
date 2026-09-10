@@ -97,6 +97,8 @@ jobs:
           helm upgrade --install datadog datadog/datadog \
             --namespace datadog \
             --values observability/datadog-values.yaml \
+            --set datadog.clusterName="oficina-${{ inputs.environment }}" \
+            --set-string 'datadog.tags[1]=env:${{ inputs.environment }}' \
             --wait --timeout 10m
 
           kubectl get deployments -n external-secrets
