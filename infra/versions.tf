@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
+    datadog = {
+      source  = "DataDog/datadog"
+      version = "~> 3.50"
+    }
   }
 }
 
@@ -21,4 +25,10 @@ provider "aws" {
       Repository  = "oficina-k8s-infra"
     }
   }
+}
+
+provider "datadog" {
+  api_key = var.datadog_api_key
+  app_key = var.datadog_app_key
+  api_url = var.datadog_api_url
 }

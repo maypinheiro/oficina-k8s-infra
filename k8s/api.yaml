@@ -57,6 +57,23 @@ spec:
                 name: oficina-api-config
             - secretRef:
                 name: oficina-api-secrets
+          env:
+            - name: DD_AGENT_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: DD_SERVICE
+              value: oficina-api
+            - name: DD_ENV
+              value: ENVIRONMENT
+            - name: DD_VERSION
+              value: IMAGE_TAG
+            - name: DD_LOGS_INJECTION
+              value: "true"
+            - name: DD_RUNTIME_METRICS_ENABLED
+              value: "true"
+            - name: DD_TRACE_SAMPLE_RATE
+              value: "1"
           readinessProbe:
             httpGet:
               path: /health

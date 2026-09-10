@@ -71,3 +71,23 @@ variable "cluster_public_access_cidrs" {
     error_message = "Informe ao menos um CIDR administrativo restrito; 0.0.0.0/0 nao e permitido."
   }
 }
+
+variable "datadog_api_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "datadog_app_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "datadog_api_url" {
+  type    = string
+  default = "https://api.datadoghq.com/"
+}
+variable "alert_notification" {
+  description = "Handle Datadog, por exemplo @email ou @slack-canal."
+  type        = string
+  default     = ""
+}
