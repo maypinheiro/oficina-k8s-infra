@@ -1,5 +1,9 @@
 # Dashboards Datadog
 
+O monitor de erro PostgreSQL baseado em logs usa `enable_log_monitors=true` e
+deve ser habilitado depois da primeira ingestão no Log Management. Os monitores
+baseados em métricas e os dashboards podem ser criados desde o primeiro deploy.
+
 O Terraform cria uma visão por ambiente para cada público:
 
 1. **Operação da API**: latência p95 por rota, throughput, HTTP 5xx e uptime;

@@ -91,3 +91,9 @@ variable "alert_notification" {
   type        = string
   default     = ""
 }
+
+variable "enable_log_monitors" {
+  description = "Habilita monitores de logs depois que Log Management estiver ativo na organizacao Datadog."
+  type        = bool
+  default     = false
+}

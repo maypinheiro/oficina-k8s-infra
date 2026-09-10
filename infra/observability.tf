@@ -84,6 +84,8 @@ resource "datadog_monitor" "os_operation_errors" {
 }
 
 resource "datadog_monitor" "postgres_errors" {
+  count = var.enable_log_monitors ? 1 : 0
+
   name    = "[${upper(var.environment)}] Oficina - falha de conexao PostgreSQL"
   type    = "log alert"
   query   = "logs(\"service:oficina-api env:${var.environment} PrismaClientInitializationError\").index(\"*\").rollup(\"count\").last(\"5m\") > 0"
