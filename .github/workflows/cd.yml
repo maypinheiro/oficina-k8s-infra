@@ -1,0 +1,52 @@
+name: Provision EKS
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        type: choice
+        options: [hml, prod]
+
+permissions: { contents: read }
+concurrency: { group: oficina-k8s-${{ inputs.environment }}, cancel-in-progress: false }
+
+jobs:
+  deploy:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      TF_VAR_environment: ${{ inputs.environment }}
+      TF_VAR_cluster_role_arn: arn:aws:iam::982623100545:role/LabRole
+      TF_VAR_node_role_arn: arn:aws:iam::982623100545:role/LabRole
+      TF_VAR_cluster_public_access_cidrs: ${{ secrets.CLUSTER_PUBLIC_ACCESS_CIDRS_JSON }}
+      TF_VAR_datadog_api_key: ${{ secrets.DATADOG_API_KEY }}
+      TF_VAR_datadog_app_key: ${{ secrets.DATADOG_APP_KEY }}
+      TF_VAR_alert_notification: ${{ vars.DATADOG_ALERT_NOTIFICATION }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: 1.6.6 }
+      - name: Plan and apply
+        working-directory: infra
+        run: |
+          terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" -backend-config="key=k8s/${{ inputs.environment }}/terraform.tfstate" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${{ secrets.TF_STATE_LOCK_TABLE }}" -backend-config="encrypt=true"
+          terraform plan -out=tfplan
+          terraform apply -auto-approve tfplan
+          terraform output -json > deployment-outputs.json
+      - name: Validate cluster
+        run: |
+          aws eks update-kubeconfig --name "oficina-${{ inputs.environment }}" --region "$AWS_REGION"
+          kubectl get nodes
+          kubectl get --raw='/readyz'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eks-outputs-${{ inputs.environment }}-${{ github.sha }}
+          path: infra/deployment-outputs.json
