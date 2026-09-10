@@ -55,3 +55,39 @@ resource "datadog_monitor" "rds_connections" {
   tags    = local.monitor_tags
   monitor_thresholds { critical = 70 }
 }
+
+resource "datadog_monitor" "pod_cpu" {
+  name    = "[${upper(var.environment)}] Oficina API - CPU sustentada"
+  type    = "query alert"
+  query   = "avg(last_15m):avg:kubernetes.cpu.usage.total{env:${var.environment},kube_deployment:oficina-api} > 0.8"
+  message = "CPU dos pods elevada por 15 minutos. ${var.alert_notification}"
+  tags    = local.monitor_tags
+  monitor_thresholds { critical = 0.8 }
+}
+
+resource "datadog_monitor" "pod_memory" {
+  name    = "[${upper(var.environment)}] Oficina API - memoria sustentada"
+  type    = "query alert"
+  query   = "avg(last_15m):avg:kubernetes.memory.usage_pct{env:${var.environment},kube_deployment:oficina-api} > 0.85"
+  message = "Memoria dos pods acima de 85%. ${var.alert_notification}"
+  tags    = local.monitor_tags
+  monitor_thresholds { critical = 0.85 }
+}
+
+resource "datadog_monitor" "os_operation_errors" {
+  name    = "[${upper(var.environment)}] Oficina - falha em operacao de OS"
+  type    = "query alert"
+  query   = "sum(last_5m):sum:oficina.os.operation_errors{env:${var.environment}}.as_count() > 0"
+  message = "Falha na abertura ou mudanca de status de OS. ${var.alert_notification}"
+  tags    = local.monitor_tags
+  monitor_thresholds { critical = 0 }
+}
+
+resource "datadog_monitor" "postgres_errors" {
+  name    = "[${upper(var.environment)}] Oficina - falha de conexao PostgreSQL"
+  type    = "log alert"
+  query   = "logs(\"service:oficina-api env:${var.environment} PrismaClientInitializationError\").index(\"*\").rollup(\"count\").last(\"5m\") > 0"
+  message = "A API registrou falha de conexao PostgreSQL. ${var.alert_notification}"
+  tags    = local.monitor_tags
+  monitor_thresholds { critical = 0 }
+}
