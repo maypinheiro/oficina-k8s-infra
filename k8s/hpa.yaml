@@ -2,7 +2,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: oficina-api
-  namespace: oficina
+  namespace: oficina-env
   labels:
     app.kubernetes.io/name: oficina-api
     app.kubernetes.io/component: backend

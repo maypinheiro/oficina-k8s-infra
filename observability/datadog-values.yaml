@@ -1,0 +1,30 @@
+datadog:
+  apiKeyExistingSecret: datadog-secret
+  site: datadoghq.com
+  clusterName: oficina-ENVIRONMENT
+  tags:
+    - project:oficina
+    - env:ENVIRONMENT
+  logs:
+    enabled: true
+    containerCollectAll: true
+  apm:
+    portEnabled: true
+  dogstatsd:
+    port: 8125
+    nonLocalTraffic: true
+  processAgent:
+    enabled: true
+    processCollection: false
+  kubeStateMetricsCore:
+    enabled: true
+  orchestratorExplorer:
+    enabled: true
+clusterAgent:
+  enabled: true
+agents:
+  containers:
+    agent:
+      resources:
+        requests: { cpu: 100m, memory: 128Mi }
+        limits: { cpu: 300m, memory: 512Mi }
