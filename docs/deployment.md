@@ -4,9 +4,9 @@
 
 1. aplicar `infra/` com credenciais temporarias do Learner Lab;
 2. configurar o `kubectl` com o output `configure_kubectl_command`;
-3. instalar AWS Load Balancer Controller, External Secrets Operator e Cluster Autoscaler;
-   aplicar `observability/datadog-secret.yaml` e instalar o chart `datadog/datadog`
-   com `observability/datadog-values.yaml`;
+3. o workflow instala de forma idempotente AWS Load Balancer Controller, External
+   Secrets Operator, Cluster Autoscaler e o chart `datadog/datadog`; a API key do
+   Datadog e materializada como Secret Kubernetes diretamente do GitHub Environment;
 4. substituir `oficina-env`, `ENVIRONMENT`, `IMAGE_TAG` e `CORS_ORIGIN` nos manifests;
 5. aplicar namespace, secret store, configuracao e external secrets;
 6. executar `prisma-job.yaml` e aguardar conclusao;

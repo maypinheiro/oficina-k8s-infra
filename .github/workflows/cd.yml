@@ -61,6 +61,47 @@ jobs:
           aws eks update-kubeconfig --name "oficina-${{ inputs.environment }}" --region "$AWS_REGION"
           kubectl get nodes
           kubectl get --raw='/readyz'
+      - name: Install cluster controllers
+        shell: bash
+        run: |
+          helm repo add external-secrets https://charts.external-secrets.io
+          helm repo add eks https://aws.github.io/eks-charts
+          helm repo add autoscaler https://kubernetes.github.io/autoscaler
+          helm repo add datadog https://helm.datadoghq.com
+          helm repo update
+
+          helm upgrade --install external-secrets external-secrets/external-secrets \
+            --namespace external-secrets --create-namespace \
+            --set installCRDs=true --wait --timeout 10m
+
+          kubectl apply -f k8s/cluster-secret-store.yaml
+
+          helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
+            --namespace kube-system \
+            --set clusterName="oficina-${{ inputs.environment }}" \
+            --set region="$AWS_REGION" \
+            --set vpcId="$(terraform -chdir=infra output -raw vpc_id)" \
+            --wait --timeout 10m
+
+          helm upgrade --install cluster-autoscaler autoscaler/cluster-autoscaler \
+            --namespace kube-system \
+            --set autoDiscovery.clusterName="oficina-${{ inputs.environment }}" \
+            --set awsRegion="$AWS_REGION" \
+            --wait --timeout 10m
+
+          kubectl create namespace datadog --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create secret generic datadog-secret \
+            --namespace datadog \
+            --from-literal=api-key="$TF_VAR_datadog_api_key" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          helm upgrade --install datadog datadog/datadog \
+            --namespace datadog \
+            --values observability/datadog-values.yaml \
+            --wait --timeout 10m
+
+          kubectl get deployments -n external-secrets
+          kubectl get deployment aws-load-balancer-controller cluster-autoscaler -n kube-system
+          kubectl get daemonset -n datadog
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: eks-outputs-${{ inputs.environment }}-${{ github.sha }}
