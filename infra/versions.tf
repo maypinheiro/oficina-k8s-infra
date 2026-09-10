@@ -2,13 +2,23 @@ terraform {
   required_version = ">= 1.5.6"
 
   required_providers {
-    kind = {
-      source  = "tehcyx/kind"
-      version = "~> 0.6"
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
     }
-    kubectl = {
-      source  = "gavinbunney/kubectl"
-      version = "~> 1.14"
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project     = "techchallenge-oficina"
+      Environment = var.environment
+      ManagedBy   = "terraform"
+      CostCenter  = "fiap-fase3"
+      Repository  = "oficina-k8s-infra"
     }
   }
 }
