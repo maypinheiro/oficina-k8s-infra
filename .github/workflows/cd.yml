@@ -8,8 +8,12 @@ on:
         type: choice
         options: [hml, prod]
 
-permissions: { contents: read }
-concurrency: { group: oficina-k8s-${{ inputs.environment }}, cancel-in-progress: false }
+permissions:
+  contents: read
+
+concurrency:
+  group: oficina-k8s-${{ inputs.environment }}
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -33,7 +37,8 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
-        with: { terraform_version: 1.6.6 }
+        with:
+          terraform_version: 1.6.6
       - name: Plan and apply
         working-directory: infra
         run: |
