@@ -25,14 +25,14 @@ jobs:
       TF_VAR_datadog_app_key: ${{ secrets.DATADOG_APP_KEY }}
       TF_VAR_alert_notification: ${{ vars.DATADOG_ALERT_NOTIFICATION }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: aws-actions/configure-aws-credentials@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with: { terraform_version: 1.6.6 }
       - name: Plan and apply
         working-directory: infra
@@ -46,7 +46,7 @@ jobs:
           aws eks update-kubeconfig --name "oficina-${{ inputs.environment }}" --region "$AWS_REGION"
           kubectl get nodes
           kubectl get --raw='/readyz'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: eks-outputs-${{ inputs.environment }}-${{ github.sha }}
           path: infra/deployment-outputs.json
