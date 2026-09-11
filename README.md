@@ -39,6 +39,8 @@ flowchart LR
 - [Arquitetura integrada da solução](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/entrega-tecnica.md)
 - [ADR do EKS](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/adrs/adr-003-amazon-eks.md)
 - [ADR do HPA](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/adrs/adr-004-hpa.md)
+- [Matriz completa de conformidade](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md)
+- [Guia de demonstração do HPA/Datadog](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/guia-demonstracao-e-aceite.md)
 
 Repositórios relacionados: [API](https://github.com/maypinheiro/oficina-api), [autenticação](https://github.com/maypinheiro/oficina-auth-function) e [banco](https://github.com/maypinheiro/oficina-database-infra).
 
@@ -61,10 +63,22 @@ Os manifests de PostgreSQL e Metrics Server usados na fase local são legado e n
 
 CI valida Terraform, segurança e manifests. O workflow `Provision EKS` aplica rede/cluster e instala controllers. A ordem cloud é: EKS/rede, RDS, API/migrations e Functions/Gateway. Rollback usa commit/plan ou SHA conhecido; não se edita state nem se destrói o cluster como diagnóstico.
 
+### Como executar o provisionamento
+
+1. Atualize as credenciais temporárias e chaves Datadog no GitHub Environment.
+2. Abra **Actions → Provision EKS → Run workflow** e escolha `hml` ou `prod`.
+3. O workflow aplica Terraform, valida nodes/endpoint e instala External Secrets, Load Balancer Controller, Cluster Autoscaler e Datadog.
+4. Preserve o artefato `eks-outputs-<env>-<sha>`; seus outputs alimentam os demais repositórios.
+5. Prossiga com RDS, API e Functions, nesta ordem.
+
+O workflow ainda usa gatilho manual; a automação após CI das branches de ambiente é uma lacuna obrigatória registrada na matriz.
+
 ## Ambiente validado e limitações
 
 - Conta acadêmica `982623100545`, região `us-east-1`;
 - homologação validada: <https://github.com/maypinheiro/oficina-k8s-infra/actions/runs/34616729840>;
 - produção permanece codificada e isolada, condicionada ao orçamento do laboratório.
+
+Dashboards provisionados: [API](https://app.datadoghq.com/dashboard/uhc-x7j-d3i), [Kubernetes/HPA](https://app.datadoghq.com/dashboard/cfp-bd3-ayn) e [Ordens de serviço](https://app.datadoghq.com/dashboard/i9b-paf-7z5).
 
 Credenciais STS do Learner Lab expiram. Controllers que acessam AWS precisam receber a sessão atual; após renovar os secrets do GitHub, execute novamente o provisionamento ou o CD da API. EKS, nodes, NAT e NLB geram custo enquanto ativos.
