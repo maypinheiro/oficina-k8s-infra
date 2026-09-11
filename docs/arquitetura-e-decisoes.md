@@ -121,3 +121,20 @@ Três dashboards são mantidos como Terraform: API, Kubernetes e negócio. Monit
 ## Evidência validada
 
 Terraform, EKS, nodes, controllers e artefatos foram validados em homologação: <https://github.com/maypinheiro/oficina-k8s-infra/actions/runs/34616729840>.
+
+## Rastreabilidade para avaliação
+
+| Requisito | Implementação |
+|---|---|
+| Kubernetes cloud | `infra/cluster.tf` |
+| Rede em duas AZs | `infra/network.tf` |
+| Escalabilidade | `k8s/hpa.yaml` e Cluster Autoscaler no CD |
+| Disponibilidade | `k8s/api-pdb.yaml`, probes e duas réplicas em `k8s/api.yaml` |
+| Imagem cloud | ECR em `infra/cluster.tf` |
+| Secrets | `k8s/cluster-secret-store.yaml` e `k8s/secret.yaml` |
+| CPU/memória/HPA | `observability/datadog-values.yaml` e dashboard Kubernetes |
+| Dashboards | `infra/dashboards.tf` e `infra/dashboards/*.json.tftpl` |
+| Alertas | `infra/observability.tf` |
+| CI/CD | `.github/workflows/ci.yml` e `cd.yml` |
+
+Matriz completa: <https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md>.
