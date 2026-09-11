@@ -4,9 +4,9 @@
 
 1. aplicar `infra/` com credenciais temporarias do Learner Lab;
 2. configurar o `kubectl` com o output `configure_kubectl_command`;
-3. instalar AWS Load Balancer Controller, External Secrets Operator e Cluster Autoscaler;
-   aplicar `observability/datadog-secret.yaml` e instalar o chart `datadog/datadog`
-   com `observability/datadog-values.yaml`;
+3. o workflow instala de forma idempotente AWS Load Balancer Controller, External
+   Secrets Operator, Cluster Autoscaler e o chart `datadog/datadog`; a API key do
+   Datadog e materializada como Secret Kubernetes diretamente do GitHub Environment;
 4. substituir `oficina-env`, `ENVIRONMENT`, `IMAGE_TAG` e `CORS_ORIGIN` nos manifests;
 5. aplicar namespace, secret store, configuracao e external secrets;
 6. executar `prisma-job.yaml` e aguardar conclusao;
@@ -19,6 +19,13 @@ O metrics-server cloud e instalado como add-on do EKS.
 O External Secrets materializa somente o Secret consumido pelos pods. No Learner
 Lab, o acesso inicial usa a role fornecida; em conta corporativa, usar IRSA/Pod
 Identity com acesso somente aos segredos declarados.
+
+Como o Learner Lab nao disponibiliza IRSA e bloqueia o IMDS para os pods, o
+workflow atualiza um Secret Kubernetes no namespace `external-secrets` com as
+credenciais STS temporarias da sessao. Essa excecao e exclusiva de `hml`; as
+credenciais expiram com o laboratorio e devem ser renovadas a cada nova sessao.
+Em producao, esse mecanismo deve ser substituido obrigatoriamente por IRSA ou
+EKS Pod Identity.
 
 O Cluster Autoscaler deve usar autodiscovery pelo nome do cluster. O node group
 ja recebe as tags de descoberta e os limites `min/desired/max` definidos por

@@ -39,6 +39,16 @@ jobs:
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
           terraform_version: 1.6.6
+      - name: Authorize this runner on the EKS public endpoint
+        shell: bash
+        run: |
+          RUNNER_CIDR="$(curl --fail --silent --show-error https://checkip.amazonaws.com)/32"
+          CONFIGURED_CIDRS="${TF_VAR_cluster_public_access_cidrs:-[]}"
+          MERGED_CIDRS="$(jq --compact-output --null-input \
+            --argjson configured "$CONFIGURED_CIDRS" \
+            --arg runner "$RUNNER_CIDR" \
+            '$configured + [$runner] | unique')"
+          echo "TF_VAR_cluster_public_access_cidrs=$MERGED_CIDRS" >> "$GITHUB_ENV"
       - name: Plan and apply
         working-directory: infra
         run: |
@@ -51,6 +61,69 @@ jobs:
           aws eks update-kubeconfig --name "oficina-${{ inputs.environment }}" --region "$AWS_REGION"
           kubectl get nodes
           kubectl get --raw='/readyz'
+      - name: Install cluster controllers
+        shell: bash
+        run: |
+          helm repo add external-secrets https://charts.external-secrets.io
+          helm repo add eks https://aws.github.io/eks-charts
+          helm repo add autoscaler https://kubernetes.github.io/autoscaler
+          helm repo add datadog https://helm.datadoghq.com
+          helm repo update
+
+          helm upgrade --install external-secrets external-secrets/external-secrets \
+            --namespace external-secrets --create-namespace \
+            --set installCRDs=true --wait --timeout 10m
+
+          kubectl create secret generic aws-academy-credentials \
+            --namespace external-secrets \
+            --from-literal=access-key-id="$AWS_ACCESS_KEY_ID" \
+            --from-literal=secret-access-key="$AWS_SECRET_ACCESS_KEY" \
+            --from-literal=session-token="$AWS_SESSION_TOKEN" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl rollout restart deployment/external-secrets \
+            deployment/external-secrets-cert-controller \
+            deployment/external-secrets-webhook \
+            --namespace external-secrets
+          kubectl rollout status deployment/external-secrets \
+            --namespace external-secrets --timeout=5m
+          kubectl apply -f k8s/cluster-secret-store.yaml
+
+          kubectl create secret generic aws-academy-credentials \
+            --namespace kube-system \
+            --from-literal=AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+            --from-literal=AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+            --from-literal=AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
+            --namespace kube-system \
+            --set clusterName="oficina-${{ inputs.environment }}" \
+            --set region="$AWS_REGION" \
+            --set vpcId="$(terraform -chdir=infra output -raw vpc_id)" \
+            --set envFrom[0].secretRef.name=aws-academy-credentials \
+            --wait --timeout 10m
+
+          helm upgrade --install cluster-autoscaler autoscaler/cluster-autoscaler \
+            --namespace kube-system \
+            --set autoDiscovery.clusterName="oficina-${{ inputs.environment }}" \
+            --set awsRegion="$AWS_REGION" \
+            --wait --timeout 10m
+
+          kubectl create namespace datadog --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create secret generic datadog-secret \
+            --namespace datadog \
+            --from-literal=api-key="$TF_VAR_datadog_api_key" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          helm upgrade --install datadog datadog/datadog \
+            --namespace datadog \
+            --values observability/datadog-values.yaml \
+            --set datadog.clusterName="oficina-${{ inputs.environment }}" \
+            --set-string 'datadog.tags[1]=env:${{ inputs.environment }}' \
+            --wait --timeout 10m
+
+          kubectl get deployments -n external-secrets
+          kubectl get deployment aws-load-balancer-controller -n kube-system
+          kubectl get deployment -n kube-system -l app.kubernetes.io/instance=cluster-autoscaler
+          kubectl get daemonset -n datadog
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: eks-outputs-${{ inputs.environment }}-${{ github.sha }}
