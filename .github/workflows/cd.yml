@@ -82,11 +82,18 @@ jobs:
             --dry-run=client -o yaml | kubectl apply -f -
           kubectl apply -f k8s/cluster-secret-store.yaml
 
+          kubectl create secret generic aws-academy-credentials \
+            --namespace kube-system \
+            --from-literal=AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+            --from-literal=AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+            --from-literal=AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
+            --dry-run=client -o yaml | kubectl apply -f -
           helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
             --namespace kube-system \
             --set clusterName="oficina-${{ inputs.environment }}" \
             --set region="$AWS_REGION" \
             --set vpcId="$(terraform -chdir=infra output -raw vpc_id)" \
+            --set envFrom[0].secretRef.name=aws-academy-credentials \
             --wait --timeout 10m
 
           helm upgrade --install cluster-autoscaler autoscaler/cluster-autoscaler \
