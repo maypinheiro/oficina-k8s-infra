@@ -20,6 +20,13 @@ O External Secrets materializa somente o Secret consumido pelos pods. No Learner
 Lab, o acesso inicial usa a role fornecida; em conta corporativa, usar IRSA/Pod
 Identity com acesso somente aos segredos declarados.
 
+Como o Learner Lab nao disponibiliza IRSA e bloqueia o IMDS para os pods, o
+workflow atualiza um Secret Kubernetes no namespace `external-secrets` com as
+credenciais STS temporarias da sessao. Essa excecao e exclusiva de `hml`; as
+credenciais expiram com o laboratorio e devem ser renovadas a cada nova sessao.
+Em producao, esse mecanismo deve ser substituido obrigatoriamente por IRSA ou
+EKS Pod Identity.
+
 O Cluster Autoscaler deve usar autodiscovery pelo nome do cluster. O node group
 ja recebe as tags de descoberta e os limites `min/desired/max` definidos por
 ambiente. A permissao de Auto Scaling depende da role liberada pelo Learner Lab.

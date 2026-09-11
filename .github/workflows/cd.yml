@@ -74,6 +74,12 @@ jobs:
             --namespace external-secrets --create-namespace \
             --set installCRDs=true --wait --timeout 10m
 
+          kubectl create secret generic aws-academy-credentials \
+            --namespace external-secrets \
+            --from-literal=access-key-id="$AWS_ACCESS_KEY_ID" \
+            --from-literal=secret-access-key="$AWS_SECRET_ACCESS_KEY" \
+            --from-literal=session-token="$AWS_SESSION_TOKEN" \
+            --dry-run=client -o yaml | kubectl apply -f -
           kubectl apply -f k8s/cluster-secret-store.yaml
 
           helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
