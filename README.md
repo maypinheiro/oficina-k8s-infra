@@ -71,7 +71,7 @@ CI valida Terraform, segurança e manifests. O workflow `Provision EKS` aplica r
 4. Preserve o artefato `eks-outputs-<env>-<sha>`; seus outputs alimentam os demais repositórios.
 5. Prossiga com RDS, API e Functions, nesta ordem.
 
-O workflow ainda usa gatilho manual; a automação após CI das branches de ambiente é uma lacuna obrigatória registrada na matriz.
+O workflow usa `workflow_run` para provisionar automaticamente `hml` após CI verde em `homolog` e `prod` após CI verde em `main`. O disparo manual continua disponível para contingência, e produção permanece protegida pela aprovação do GitHub Environment.
 
 ## Ambiente validado e limitações
 

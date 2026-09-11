@@ -1,6 +1,6 @@
 # CI/CD cloud
 
-Cada repositório executa CI em pull requests e possui CD manual por ambiente.
+Cada repositório executa CI em pull requests. O CD é automático após CI bem-sucedido em `homolog` e `main`, com destino `hml` e `prod`, respectivamente. O disparo manual permanece disponível para contingência e produção requer aprovação do GitHub Environment.
 O deploy de `prod` deve usar required reviewers no GitHub Environment.
 
 ## Ordem do primeiro provisionamento
