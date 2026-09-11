@@ -37,9 +37,9 @@ jobs:
       TF_VAR_datadog_app_key: ${{ secrets.DATADOG_APP_KEY }}
       TF_VAR_alert_notification: ${{ vars.DATADOG_ALERT_NOTIFICATION }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5; NOSONAR - trusted push branches only
         with:
-          ref: ${{ env.DEPLOY_REF }} # NOSONAR - only successful push runs from homolog/main reach this job
+          ref: ${{ env.DEPLOY_REF }}
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
