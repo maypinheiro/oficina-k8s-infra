@@ -102,7 +102,8 @@ jobs:
             --wait --timeout 10m
 
           kubectl get deployments -n external-secrets
-          kubectl get deployment aws-load-balancer-controller cluster-autoscaler -n kube-system
+          kubectl get deployment aws-load-balancer-controller -n kube-system
+          kubectl get deployment -n kube-system -l app.kubernetes.io/instance=cluster-autoscaler
           kubectl get daemonset -n datadog
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
