@@ -36,13 +36,21 @@ flowchart LR
 - [CI/CD](docs/cicd.md)
 - [Dashboards e monitores](docs/dashboards.md)
 - [Governança do repositório](docs/governanca-repositorio.md)
-- [Arquitetura integrada da solução](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/entrega-tecnica.md)
-- [ADR do EKS](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/adrs/adr-003-amazon-eks.md)
-- [ADR do HPA](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/adrs/adr-004-hpa.md)
+- [Arquitetura integrada da solução](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/entrega-tecnica.md)
+- [ADR do EKS](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/adrs/adr-003-amazon-eks.md)
+- [ADR do HPA](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/adrs/adr-004-hpa.md)
 - [Matriz completa de conformidade](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md)
 - [Guia de demonstração do HPA/Datadog](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/guia-demonstracao-e-aceite.md)
+- [Entrega final e vídeo](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/entrega-final.md)
 
 Repositórios relacionados: [API](https://github.com/maypinheiro/oficina-api), [autenticação](https://github.com/maypinheiro/oficina-auth-function) e [banco](https://github.com/maypinheiro/oficina-database-infra).
+
+### API publicada e Swagger
+
+Este repositório não expõe uma API própria. A infraestrutura provisionada sustenta a API e o Swagger compartilhados:
+
+- Swagger/OpenAPI: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com/docs/>
+- URL base do API Gateway: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com>
 
 ## Tecnologias
 
@@ -76,7 +84,7 @@ O workflow usa `workflow_run` para provisionar automaticamente `hml` após CI ve
 ## Ambiente validado e limitações
 
 - Conta acadêmica `982623100545`, região `us-east-1`;
-- homologação validada: <https://github.com/maypinheiro/oficina-k8s-infra/actions/runs/34616729840>;
+- homologação e Datadog validados: <https://github.com/maypinheiro/oficina-k8s-infra/actions/runs/34776527610>;
 - produção permanece codificada e isolada, condicionada ao orçamento do laboratório.
 
 Dashboards provisionados: [API](https://app.datadoghq.com/dashboard/uhc-x7j-d3i), [Kubernetes/HPA](https://app.datadoghq.com/dashboard/cfp-bd3-ayn) e [Ordens de serviço](https://app.datadoghq.com/dashboard/i9b-paf-7z5).

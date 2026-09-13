@@ -14,10 +14,10 @@ resource "datadog_monitor" "http_5xx" {
 resource "datadog_monitor" "latency" {
   name    = "[${upper(var.environment)}] Oficina API - latencia p95 elevada"
   type    = "query alert"
-  query   = "avg(last_10m):p95:trace.express.request.duration{env:${var.environment},service:oficina-api} > 2"
+  query   = "avg(last_10m):p95:oficina.http.request.duration_ms{env:${var.environment},service:oficina-api} > 2000"
   message = "Latencia p95 acima de 2 segundos por 10 minutos. ${var.alert_notification}"
   tags    = local.monitor_tags
-  monitor_thresholds { critical = 2 }
+  monitor_thresholds { critical = 2000 }
 }
 
 resource "datadog_monitor" "api_unavailable" {

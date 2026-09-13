@@ -138,6 +138,31 @@ jobs:
             --set-string 'datadog.tags[1]=env:${{ env.DEPLOY_ENV }}' \
             --wait --timeout 10m
 
+          kubectl get pods -n datadog -o wide
+          DATADOG_READY=false
+          for attempt in {1..30}; do
+            DESIRED="$(kubectl get daemonset datadog -n datadog \
+              -o jsonpath='{.status.desiredNumberScheduled}')"
+            READY="$(kubectl get daemonset datadog -n datadog \
+              -o jsonpath='{.status.numberReady}')"
+            if [[ "$DESIRED" -gt 0 && "$READY" == "$DESIRED" ]]; then
+              DATADOG_READY=true
+              break
+            fi
+            echo "Waiting for Datadog Agents: ready=$READY desired=$DESIRED (attempt $attempt/30)"
+            sleep 10
+          done
+          if [[ "$DATADOG_READY" != "true" ]]; then
+            echo "Datadog DaemonSet did not become fully ready." >&2
+            kubectl describe pods -n datadog
+            kubectl get events -n datadog --sort-by='.lastTimestamp'
+            for pod in $(kubectl get pods -n datadog \
+              -l app=datadog -o jsonpath='{.items[*].metadata.name}'); do
+              kubectl logs -n datadog "$pod" --all-containers --tail=120 || true
+            done
+            exit 1
+          fi
+
           kubectl get deployments -n external-secrets
           kubectl get deployment aws-load-balancer-controller -n kube-system
           kubectl get deployment -n kube-system -l app.kubernetes.io/instance=cluster-autoscaler
