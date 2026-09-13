@@ -114,6 +114,11 @@ jobs:
             --set vpcId="$(terraform -chdir=infra output -raw vpc_id)" \
             --set envFrom[0].secretRef.name=aws-academy-credentials \
             --wait --timeout 10m
+          # Helm retains the same Secret reference when Academy credentials rotate.
+          kubectl rollout restart deployment/aws-load-balancer-controller \
+            --namespace kube-system
+          kubectl rollout status deployment/aws-load-balancer-controller \
+            --namespace kube-system --timeout=5m
 
           helm upgrade --install cluster-autoscaler autoscaler/cluster-autoscaler \
             --namespace kube-system \
