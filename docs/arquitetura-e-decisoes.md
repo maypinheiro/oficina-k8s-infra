@@ -112,7 +112,7 @@ Três dashboards são mantidos como Terraform: API, Kubernetes e negócio. Monit
 
 ## Limitações do AWS Academy
 
-- Conta `982623100545` e região `us-east-1`.
+- Conta atual do AWS Academy Learner Lab `508274625814` e região `us-east-1`. A conta anterior `982623100545` foi substituída pelo laboratório.
 - `LabRole`, quotas, saldo e duração da sessão limitam recursos.
 - Credenciais estáticas temporárias são uma contingência acadêmica; IRSA/OIDC permanece evolução quando permitido.
 - EKS, nodes, NAT e NLB geram custo enquanto ativos.
