@@ -83,7 +83,7 @@ O workflow usa `workflow_run` para provisionar automaticamente `hml` após CI ve
 
 ## Ambiente validado e limitações
 
-- Conta acadêmica `982623100545`, região `us-east-1`;
+- Conta acadêmica atual `508274625814`, região `us-east-1`. O Learner Lab anterior (`982623100545`) foi encerrado e seus recursos não estão mais acessíveis;
 - homologação e Datadog validados: <https://github.com/maypinheiro/oficina-k8s-infra/actions/runs/34776527610>;
 - produção permanece codificada e isolada, condicionada ao orçamento do laboratório.
 
