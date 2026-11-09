@@ -10,6 +10,7 @@ metadata:
 data:
   NODE_ENV: production
   PORT: "3000"
+  AWS_REGION: us-east-1
   CORS_ORIGIN: "CORS_ORIGIN"
   JWT_ISSUER: oficina-auth
   JWT_AUDIENCE: oficina-api
