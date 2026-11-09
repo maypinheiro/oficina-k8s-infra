@@ -57,6 +57,8 @@ spec:
                 name: oficina-api-config
             - secretRef:
                 name: oficina-api-secrets
+            - secretRef:
+                name: oficina-api-aws-session
           env:
             - name: DD_AGENT_HOST
               valueFrom:
