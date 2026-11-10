@@ -18,6 +18,44 @@ resource "aws_eks_cluster" "this" {
   }
 }
 
+# O Learner Lab bloqueia ec2:DescribeInstances por SCP. O nodeadm usa o ID da
+# instancia obtido pelo IMDS como nome do Node, eliminando essa chamada durante
+# o bootstrap do Amazon Linux 2023.
+resource "aws_eks_access_entry" "application_nodes" {
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = var.node_role_arn
+  type          = "EC2"
+}
+
+resource "aws_launch_template" "application_nodes" {
+  name_prefix            = "${local.prefix}-application-"
+  update_default_version = true
+
+  user_data = base64encode(<<-USERDATA
+    MIME-Version: 1.0
+    Content-Type: multipart/mixed; boundary="NODEADM"
+
+    --NODEADM
+    Content-Type: application/node.eks.aws
+
+    ---
+    apiVersion: node.eks.aws/v1alpha1
+    kind: NodeConfig
+    spec:
+      featureGates:
+        InstanceIdNodeName: true
+    --NODEADM--
+  USERDATA
+  )
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "${local.prefix}-application-node"
+    }
+  }
+}
+
 resource "aws_eks_node_group" "application" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "${local.prefix}-application"
@@ -25,6 +63,11 @@ resource "aws_eks_node_group" "application" {
   subnet_ids      = aws_subnet.private[*].id
   instance_types  = var.node_instance_types
   capacity_type   = "ON_DEMAND"
+
+  launch_template {
+    id      = aws_launch_template.application_nodes.id
+    version = aws_launch_template.application_nodes.latest_version
+  }
 
   scaling_config {
     min_size     = var.node_min_size
@@ -39,6 +82,8 @@ resource "aws_eks_node_group" "application" {
     "k8s.io/cluster-autoscaler/enabled"                      = "true"
     "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}" = "owned"
   }
+
+  depends_on = [aws_eks_access_entry.application_nodes]
 }
 
 resource "aws_eks_addon" "core" {

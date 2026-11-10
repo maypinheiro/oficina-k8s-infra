@@ -114,6 +114,12 @@ Três dashboards são mantidos como Terraform: API, Kubernetes e negócio. Monit
 
 - Conta atual do AWS Academy Learner Lab `508274625814` e região `us-east-1`. A conta anterior `982623100545` foi substituída pelo laboratório.
 - `LabRole`, quotas, saldo e duração da sessão limitam recursos.
+- A SCP do laboratório nega `ec2:DescribeInstances` à `LabRole`. Em nós Amazon
+  Linux 2023, o bootstrap habilita `nodeadm.featureGates.InstanceIdNodeName` e
+  usa um access entry EKS do tipo `EC2` (`system:node:{{SessionName}}`). Assim o
+  kubelet identifica o Node pelo ID imutável obtido via IMDS e não depende da
+  consulta bloqueada. O `Launch Template` e o access entry são gerenciados pelo
+  Terraform; esta adaptação é específica da restrição acadêmica.
 - Credenciais estáticas temporárias são uma contingência acadêmica; IRSA/OIDC permanece evolução quando permitido.
 - EKS, nodes, NAT e NLB geram custo enquanto ativos.
 - A contingência de orçamento é manter produção codificada e demonstrar homologação isolada.
