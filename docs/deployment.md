@@ -31,6 +31,19 @@ O Cluster Autoscaler deve usar autodiscovery pelo nome do cluster. O node group
 ja recebe as tags de descoberta e os limites `min/desired/max` definidos por
 ambiente. A permissao de Auto Scaling depende da role liberada pelo Learner Lab.
 
+## Bootstrap dos nodes no Learner Lab
+
+A política organizacional do AWS Academy bloqueia `ec2:DescribeInstances` para
+a `LabRole`. O Managed Node Group usa um Launch Template com um documento
+`NodeConfig` do AL2023 que habilita `InstanceIdNodeName`. O access entry EKS da
+role deve permanecer no tipo `EC2`; os tipos `EC2_LINUX`/`EC2_WINDOWS` usam o
+DNS privado e reintroduzem a chamada negada durante o bootstrap.
+
+O pipeline importa o access entry preexistente para o state antes do plan. Em
+uma conta nova do laboratório, não se deve criar manualmente um segundo mapeamento
+para a mesma role: aplique o Terraform e valide que `kubectl get nodes` lista os
+IDs `i-*` com estado `Ready`.
+
 A imagem no ECR possui tags imutaveis. A pipeline substitui `IMAGE_TAG` pelo SHA
 do commit, executa a migration antes do rollout e nunca utiliza `latest`.
 
