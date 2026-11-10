@@ -82,6 +82,12 @@ jobs:
           import_monitor datadog_monitor.latency 320833875
           import_monitor datadog_monitor.http_5xx 320833878
           import_monitor datadog_monitor.pod_memory 320833879
+          # O managed node group originalmente criou este access entry fora do
+          # Terraform. A importacao torna a migracao para InstanceIdNodeName
+          # repetivel no state da conta efemera do Learner Lab.
+          terraform state show aws_eks_access_entry.application_nodes >/dev/null 2>&1 || \
+            terraform import aws_eks_access_entry.application_nodes \
+              "oficina-${DEPLOY_ENV}:arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/LabRole" || true
           terraform plan -out=tfplan
           terraform apply -auto-approve tfplan
           terraform output -json > deployment-outputs.json
