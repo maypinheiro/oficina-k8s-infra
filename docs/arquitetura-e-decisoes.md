@@ -101,7 +101,12 @@ Controllers que usam AWS recebem credenciais temporárias do laboratório. Após
 
 ## Observabilidade
 
-Três dashboards são mantidos como Terraform: API, Kubernetes e negócio. Monitores cobrem disponibilidade, 5xx, latência, falhas de OS, restarts, pods indisponíveis e saturação. Tags mínimas: `service`, `env` e `version`.
+Quatro dashboards são mantidos como Terraform: API, Kubernetes, negócio e Saga
+distribuída. A visão da Fase 4 correlaciona OS, Billing e Execution por
+`correlationId`/`sagaId`, mede resultados e compensações, acompanha consumo
+idempotente e exibe latências p50/p95. Monitores cobrem disponibilidade, 5xx,
+latência, falhas de OS/Saga/consumidores, restarts, pods indisponíveis e
+saturação. Tags mínimas: `service`, `env` e `version`.
 
 ## Rollback e recuperação
 
@@ -112,7 +117,8 @@ Três dashboards são mantidos como Terraform: API, Kubernetes e negócio. Monit
 
 ## Limitações do AWS Academy
 
-- Conta atual do AWS Academy Learner Lab `508274625814` e região `us-east-1`. A conta anterior `982623100545` foi substituída pelo laboratório.
+- Conta atual do AWS Academy Learner Lab `533267045718` e região `us-east-1`.
+  Contas anteriores foram substituídas pelo laboratório e não são reutilizadas.
 - `LabRole`, quotas, saldo e duração da sessão limitam recursos.
 - A SCP do laboratório nega `ec2:DescribeInstances` à `LabRole`. Em nós Amazon
   Linux 2023, o bootstrap habilita `nodeadm.featureGates.InstanceIdNodeName` e

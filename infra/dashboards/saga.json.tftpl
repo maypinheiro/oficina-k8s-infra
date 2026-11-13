@@ -1,0 +1,40 @@
+{
+  "title": "[${environment_upper}] Oficina - Saga Distribuida",
+  "description": "Saude ponta a ponta da Saga de ordem de servico entre OS, Billing e Execution.",
+  "layout_type": "ordered",
+  "tags": ["team:oficina", "scope:fase4", "pattern:saga"],
+  "widgets": [
+    {"definition":{"type":"group","title":"Resultado da Saga","layout_type":"ordered","widgets":[
+      {"definition":{"type":"timeseries","title":"Sagas iniciadas, concluidas e compensadas","requests":[
+        {"q":"sum:oficina.saga.started{env:${environment}}.as_count()","display_type":"bars"},
+        {"q":"sum:oficina.saga.completed{env:${environment}}.as_count()","display_type":"bars"},
+        {"q":"sum:oficina.saga.compensated{env:${environment}}.as_count()","display_type":"bars"}
+      ]}},
+      {"definition":{"type":"query_value","title":"Falhas da Saga","autoscale":true,"precision":0,"requests":[{"q":"sum:oficina.saga.failed{env:${environment}}.as_count()","aggregator":"sum"}]}},
+      {"definition":{"type":"timeseries","title":"Transicoes por evento e etapa","requests":[{"q":"sum:oficina.saga.transitions{env:${environment}} by {event,step}.as_count()","display_type":"bars"}]}}
+    ]}},
+    {"definition":{"type":"group","title":"Mensageria e idempotencia","layout_type":"ordered","widgets":[
+      {"definition":{"type":"timeseries","title":"Mensagens processadas por servico","requests":[{"q":"sum:oficina.saga.messages.processed{env:${environment}} by {service}.as_count()","display_type":"bars"}]}},
+      {"definition":{"type":"timeseries","title":"Duplicidades descartadas","requests":[{"q":"sum:oficina.saga.messages.duplicate{env:${environment}} by {service}.as_count()","display_type":"bars"}]}},
+      {"definition":{"type":"timeseries","title":"Falhas de consumidores","requests":[{"q":"sum:oficina.saga.messages.failed{env:${environment}} by {service}.as_count()","display_type":"bars"}]}}
+    ]}},
+    {"definition":{"type":"group","title":"Latencia distribuida","layout_type":"ordered","widgets":[
+      {"definition":{"type":"timeseries","title":"Transicao do orquestrador p50/p95 (ms)","requests":[
+        {"q":"p50:oficina.saga.transition.duration_ms{env:${environment}} by {event}","display_type":"line"},
+        {"q":"p95:oficina.saga.transition.duration_ms{env:${environment}} by {event}","display_type":"line"}
+      ]}},
+      {"definition":{"type":"timeseries","title":"Consumo de mensagens p50/p95 (ms)","requests":[
+        {"q":"p50:oficina.saga.message.duration_ms{env:${environment}} by {service}","display_type":"line"},
+        {"q":"p95:oficina.saga.message.duration_ms{env:${environment}} by {service}","display_type":"line"}
+      ]}}
+    ]}},
+    {"definition":{"type":"group","title":"Servicos Kubernetes","layout_type":"ordered","widgets":[
+      {"definition":{"type":"timeseries","title":"Replicas disponiveis","requests":[{"q":"sum:kubernetes_state.deployment.replicas_available{env:${environment},kube_deployment IN (oficina-api,oficina-billing-service,oficina-execution-service)} by {kube_deployment}","display_type":"line"}]}},
+      {"definition":{"type":"timeseries","title":"Reinicios de containers","requests":[{"q":"sum:kubernetes.containers.restarts{env:${environment},kube_deployment IN (oficina-api,oficina-billing-service,oficina-execution-service)} by {kube_deployment}","display_type":"bars"}]}},
+      {"definition":{"type":"timeseries","title":"Erros HTTP 5xx por servico","requests":[{"q":"sum:oficina.http.errors{env:${environment}} by {service}.as_count()","display_type":"bars"}]}}
+    ]}},
+    {"definition":{"type":"group","title":"Correlacao por logs","layout_type":"ordered","widgets":[
+      {"definition":{"type":"log_stream","title":"Logs dos tres microsservicos","query":"env:${environment} (service:oficina-api OR service:oficina-billing-service OR service:oficina-execution-service)","columns":["service","@correlationId","@sagaId","@eventId","message"],"message_display":"expanded-md","show_date_column":true,"show_message_column":true}}
+    ]}}
+  ]
+}

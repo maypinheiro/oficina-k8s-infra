@@ -11,7 +11,7 @@ Infraestrutura como código da plataforma Amazon EKS, rede, imagens, workloads K
 - Deployment, Service, probes, requests/limits e segurança não-root;
 - HPA de 2 a 6 réplicas e PodDisruptionBudget;
 - External Secrets, AWS Load Balancer Controller e Cluster Autoscaler;
-- Datadog Agent, dashboards e monitores;
+- Datadog Agent, dashboards e monitores, incluindo a Saga distribuída da Fase 4;
 - Terraform e pipelines CI/CD separados por ambiente.
 
 ```mermaid
@@ -49,8 +49,8 @@ Repositórios relacionados: [API](https://github.com/maypinheiro/oficina-api), [
 
 Este repositório não expõe uma API própria. A infraestrutura provisionada sustenta a API e o Swagger compartilhados:
 
-- Swagger/OpenAPI: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com/docs/>
-- URL base do API Gateway: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com>
+- Swagger/OpenAPI: <https://1stuihvf8d.execute-api.us-east-1.amazonaws.com/docs/>
+- URL base do API Gateway: <https://1stuihvf8d.execute-api.us-east-1.amazonaws.com>
 
 ## Tecnologias
 
@@ -83,10 +83,14 @@ O workflow usa `workflow_run` para provisionar automaticamente `hml` após CI ve
 
 ## Ambiente validado e limitações
 
-- Conta acadêmica atual `508274625814`, região `us-east-1`. O Learner Lab anterior (`982623100545`) foi encerrado e seus recursos não estão mais acessíveis;
+- Conta acadêmica atual `533267045718`, região `us-east-1`. Contas anteriores do
+  Learner Lab foram encerradas e seus recursos não estão mais acessíveis;
 - homologação e Datadog validados: <https://github.com/maypinheiro/oficina-k8s-infra/actions/runs/34776527610>;
 - produção permanece codificada e isolada, condicionada ao orçamento do laboratório.
 
-Dashboards provisionados: [API](https://app.datadoghq.com/dashboard/uhc-x7j-d3i), [Kubernetes/HPA](https://app.datadoghq.com/dashboard/cfp-bd3-ayn) e [Ordens de serviço](https://app.datadoghq.com/dashboard/i9b-paf-7z5).
+Os dashboards API, Kubernetes/HPA, Ordens de Serviço e Saga Distribuída são
+provisionados na organização Datadog configurada no Environment. Os links atuais
+são publicados pelo output Terraform `datadog_dashboard_urls`; links antigos não
+são reutilizados após a troca de organização.
 
 Credenciais STS do Learner Lab expiram. Controllers que acessam AWS precisam receber a sessão atual; após renovar os secrets do GitHub, execute novamente o provisionamento ou o CD da API. EKS, nodes, NAT e NLB geram custo enquanto ativos.
