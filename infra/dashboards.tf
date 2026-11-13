@@ -14,10 +14,15 @@ resource "datadog_dashboard_json" "business" {
   dashboard = templatefile("${path.module}/dashboards/business.json.tftpl", local.dashboard_variables)
 }
 
+resource "datadog_dashboard_json" "saga_distributed" {
+  dashboard = templatefile("${path.module}/dashboards/saga.json.tftpl", local.dashboard_variables)
+}
+
 output "datadog_dashboard_urls" {
   value = {
     api        = "https://app.datadoghq.com/dashboard/${datadog_dashboard_json.api_operations.id}"
     kubernetes = "https://app.datadoghq.com/dashboard/${datadog_dashboard_json.kubernetes.id}"
     business   = "https://app.datadoghq.com/dashboard/${datadog_dashboard_json.business.id}"
+    saga       = "https://app.datadoghq.com/dashboard/${datadog_dashboard_json.saga_distributed.id}"
   }
 }

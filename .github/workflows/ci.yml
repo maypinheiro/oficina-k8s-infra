@@ -19,6 +19,7 @@ jobs:
         with:
           working_directory: infra
           soft_fail: true
+          github_token: ${{ github.token }}
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
           terraform_version: 1.6.6
