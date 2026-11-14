@@ -85,12 +85,20 @@ O workflow usa `workflow_run` para provisionar automaticamente `hml` após CI ve
 
 - Conta acadêmica atual `533267045718`, região `us-east-1`. Contas anteriores do
   Learner Lab foram encerradas e seus recursos não estão mais acessíveis;
-- homologação e Datadog validados: <https://github.com/maypinheiro/oficina-k8s-infra/actions/runs/34776527610>;
+- homologação e Datadog validados pela
+  [execução 43528997327](https://github.com/maypinheiro/oficina-k8s-infra/actions/runs/43528997327);
 - produção permanece codificada e isolada, condicionada ao orçamento do laboratório.
 
-Os dashboards API, Kubernetes/HPA, Ordens de Serviço e Saga Distribuída são
-provisionados na organização Datadog configurada no Environment. Os links atuais
-são publicados pelo output Terraform `datadog_dashboard_urls`; links antigos não
-são reutilizados após a troca de organização.
+Os dashboards foram provisionados na organização Datadog configurada no
+Environment e validados com tráfego real:
+
+- [Operação da API](https://app.datadoghq.com/dashboard/tvf-tig-7k5);
+- [Kubernetes/HPA](https://app.datadoghq.com/dashboard/s9s-5yb-abz);
+- [Ordens de Serviço](https://app.datadoghq.com/dashboard/jk8-5k2-e5b);
+- [Saga Distribuída](https://app.datadoghq.com/dashboard/qzn-ptj-zm5).
+
+Os mesmos links são publicados pelo output Terraform
+`datadog_dashboard_urls`; IDs antigos não são reutilizados após a troca de
+organização.
 
 Credenciais STS do Learner Lab expiram. Controllers que acessam AWS precisam receber a sessão atual; após renovar os secrets do GitHub, execute novamente o provisionamento ou o CD da API. EKS, nodes, NAT e NLB geram custo enquanto ativos.
