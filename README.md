@@ -15,18 +15,26 @@ Infraestrutura como código da plataforma Amazon EKS, rede, imagens, workloads K
 - Terraform e pipelines CI/CD separados por ambiente.
 
 ```mermaid
-flowchart LR
+flowchart TB
   GW["API Gateway"] --> VPCL["VPC Link"]
   VPCL --> NLB["NLB interno"]
-  NLB --> SVC["Service Kubernetes"]
+  NLB --> OSSVC["Service OS"]
   subgraph EKS["Amazon EKS"]
-    SVC --> API["Oficina API - 2 pods"]
-    HPA["HPA 2-6"] --> API
-    PDB["PDB"] --> API
-    DD["Datadog Agent"] -.-> API
+    OSSVC --> OS["OS Service"]
+    BSVC["Service Billing"] --> Billing["Billing Service"]
+    ESVC["Service Execution"] --> Execution["Execution Service"]
+    HPA["HPA/PDB por serviço"] --> OS
+    HPA --> Billing
+    HPA --> Execution
+    DD["Datadog Agent"] -.-> OS
+    DD -.-> Billing
+    DD -.-> Execution
   end
-  ECR["ECR"] --> API
-  SM["Secrets Manager"] --> ESO["External Secrets"] --> API
+  ECR["ECR/GHCR: imagens por SHA"] --> EKS
+  SM["Secrets Manager"] --> ESO["External Secrets"] --> OS
+  MQ["SNS/SQS + DLQs"] <--> OS
+  MQ <--> Billing
+  MQ <--> Execution
 ```
 
 ## Documentação
@@ -36,6 +44,12 @@ flowchart LR
 - [CI/CD](docs/cicd.md)
 - [Dashboards e monitores](docs/dashboards.md)
 - [Governança do repositório](docs/governanca-repositorio.md)
+- [Arquitetura final da Fase 4](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/arquitetura-alvo.md)
+- [Saga, caminho feliz e compensações](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/saga-orquestrada.md)
+- [Observabilidade distribuída da Fase 4](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/fase10-observabilidade-distribuida.md)
+- [Matriz de conformidade da Fase 4](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/matriz-conformidade.md)
+- [Catálogo de evidências da Fase 4](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/catalogo-evidencias.md)
+- [Decisões arquiteturais da Fase 4](https://github.com/maypinheiro/oficina-api/tree/main/docs/fase4/adrs)
 - [Arquitetura integrada da solução](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/entrega-tecnica.md)
 - [ADR do EKS](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/adrs/adr-003-amazon-eks.md)
 - [ADR do HPA](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/adrs/adr-004-hpa.md)
@@ -43,7 +57,23 @@ flowchart LR
 - [Guia de demonstração do HPA/Datadog](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/guia-demonstracao-e-aceite.md)
 - [Entrega final e vídeo](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/entrega-final.md)
 
-Repositórios relacionados: [API](https://github.com/maypinheiro/oficina-api), [autenticação](https://github.com/maypinheiro/oficina-auth-function) e [banco](https://github.com/maypinheiro/oficina-database-infra).
+Repositórios relacionados: [OS Service](https://github.com/maypinheiro/oficina-api),
+[Billing Service](https://github.com/maypinheiro/oficina-billing-service),
+[Execution Service](https://github.com/maypinheiro/oficina-execution-service),
+[autenticação](https://github.com/maypinheiro/oficina-auth-function) e
+[banco do OS](https://github.com/maypinheiro/oficina-database-infra).
+
+### Rastreabilidade da infraestrutura da Fase 4
+
+| Requisito | Evidência |
+|---|---|
+| Kubernetes | EKS em `infra/cluster.tf` e manifests em cada repositório de serviço |
+| Deploy independente | workflow de CD e imagem imutável por SHA em OS, Billing e Execution |
+| Elasticidade e disponibilidade | HPA, PDB, probes, requests/limits e RollingUpdate por serviço |
+| Mensageria | SNS, filas SQS e DLQs provisionados pelos módulos dos serviços/orquestrador |
+| Observabilidade da Fase 3 reutilizada | Agent/Cluster Agent, quatro dashboards e monitores em `infra/` e `observability/` |
+| Rastreamento distribuído | tags `service/env/version` e IDs `correlationId`/`sagaId` |
+| Ambientes | `homolog` → `hml`; `main` → `prod` protegido por GitHub Environment |
 
 ### API publicada e Swagger
 

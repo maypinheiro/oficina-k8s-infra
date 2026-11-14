@@ -2,9 +2,13 @@
 
 ## Objetivo
 
-Este repositório entrega a plataforma cloud onde a API da oficina é executada: rede, EKS, ECR, balanceamento privado, recursos Kubernetes, elasticidade e observabilidade do cluster.
+Este repositório entrega a plataforma cloud onde os três microsserviços da
+oficina são executados: rede, EKS, registros de imagens, balanceamento privado,
+componentes compartilhados, elasticidade e observabilidade do cluster.
 
-Banco de dados, código da API e Functions são mantidos em repositórios independentes e consomem os outputs desta infraestrutura.
+Os códigos e as infraestruturas específicas de OS, Billing e Execution, os
+bancos e as Functions são mantidos em repositórios independentes e consomem os
+outputs desta plataforma.
 
 ## Mapa da infraestrutura
 
@@ -54,7 +58,28 @@ flowchart TB
 
 ### EKS e API stateless
 
-Amazon EKS atende ao requisito de Kubernetes em cloud e permite demonstrar rollout, self-healing e HPA. Somente a API stateless é escalada; PostgreSQL permanece no RDS e Functions escalam pelo serviço Lambda.
+Amazon EKS atende ao requisito de Kubernetes em cloud e permite demonstrar
+rollout, self-healing e HPA. Os workloads stateless são escalados no cluster;
+PostgreSQL e DynamoDB permanecem em serviços gerenciados e Functions escalam
+pelo serviço Lambda.
+
+Na Fase 4, OS, Billing e Execution são workloads stateless independentes. Cada
+um possui Deployment, Service, HPA, PDB, probes, requests/limits, namespace e
+pipeline no próprio repositório. PostgreSQL e DynamoDB permanecem fora do
+cluster. O EKS é compartilhado para controlar custo acadêmico, mas não há imagem,
+manifesto, banco ou release compartilhado entre os microsserviços.
+
+### Cluster compartilhado, autonomia por serviço
+
+Um cluster por microsserviço aumentaria NAT, nodes, controllers e custo sem
+agregar isolamento necessário ao exercício. Foi escolhido um EKS compartilhado
+com limites por namespace e artefatos independentes. Essa decisão preserva:
+
+- build, deploy, rollback e escala independentes;
+- Service/ConfigMap/Secret específicos;
+- acesso somente ao banco, fila e tópico necessários;
+- identificação Datadog por `service`, `env` e `version`;
+- possibilidade futura de separar clusters sem alterar os contratos de domínio.
 
 ### Duas AZs e NLB interno
 
@@ -96,6 +121,11 @@ flowchart LR
   DB --> API["3. Migration, seed hml e API"]
   API --> AUTH["4. Functions, Gateway e E2E"]
 ```
+
+Para a Fase 4, após a plataforma compartilhada, a ordem é: dados/mensageria do
+OS, Billing e Execution; deploy independente dos três serviços; Functions/API
+Gateway; teste da Saga e validação Datadog. Uma falha no deploy de um participante
+não autoriza publicar imagens novas dos demais.
 
 Controllers que usam AWS recebem credenciais temporárias do laboratório. Após iniciar uma nova sessão, execute novamente `Provision EKS` ou o CD da API para atualizar esses secrets antes de diagnosticar NLB ou External Secrets.
 
